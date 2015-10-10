@@ -18,7 +18,7 @@
 @property(strong, nonatomic) NSArray* sections;
 @end
 
-static const NSInteger studentsCount = 500;
+static const NSInteger studentsCount = 1000;
 
 @implementation ViewController
 
@@ -30,18 +30,15 @@ static const NSInteger studentsCount = 500;
 
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        
+        [self.activityIndicator startAnimating];
         [self generateStudentsArray];
         [self generateSectionInBackGroundWithFilter:self.searchBar.text];
-        
         dispatch_async(dispatch_get_main_queue(), ^{
-            
             [self.tableView reloadData];
+            [self.activityIndicator stopAnimating];
         });
     });
-
 }
-
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 
@@ -70,9 +67,7 @@ static const NSInteger studentsCount = 500;
 }
 
 - (void) generateStudentsArray {
-    
-    
-    
+        
     self.studentsList = [NSMutableArray array];
     
     for (int i = 0; i < studentsCount; i++) {
@@ -198,8 +193,12 @@ static const NSInteger studentsCount = 500;
 - (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar{
     [searchBar setShowsCancelButton:YES animated:YES];
     searchBar.returnKeyType = UIReturnKeyDone;
+    
 
 }
-
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
+{
+    [self searchBarCancelButtonClicked:searchBar];
+}
 
 @end
