@@ -12,86 +12,138 @@
 #import "Section.h"
 
 @interface ViewController ()
-@property(strong, nonatomic) NSOperation* operation;
-@property(strong, nonatomic) NSOperationQueue* operationQueue;
+@property(strong, nonatomic) NSOperation* searchOperation;
+@property(strong, nonatomic) NSOperation* changeSortOperation;
+@property(strong, nonatomic) NSOperationQueue* searchQueue;
+@property(strong, nonatomic) NSOperationQueue* sortQueue;
+
 @property(strong, nonatomic) NSMutableArray* studentsList;
-@property(strong, nonatomic) NSArray* sections;
+@property(strong, nonatomic) NSMutableArray* sections;
 @end
 
-static const NSInteger studentsCount = 1000;
+static const NSInteger studentsCount = 1500;
 
 @implementation ViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.operationQueue = [[NSOperationQueue alloc]init];
-    [self.searchBar setShowsCancelButton:NO];
+    self.searchQueue = [[NSOperationQueue alloc]init];
+    self.sortQueue = [[NSOperationQueue alloc]init];
+    self.changeSortOperation = [[NSOperation alloc]init];
+    self.searchOperation = [[NSOperation alloc]init];
 
-
+    [self.activityIndicator startAnimating];
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self.activityIndicator startAnimating];
-        [self generateStudentsArray];
-        [self generateSectionInBackGroundWithFilter:self.searchBar.text];
+        self.studentsList = [NSMutableArray array];
+        self.sections = [NSMutableArray array];
+        self.studentsList = [self generateStudentsArray];
+        
+        [self sortArray:self.studentsList byParamOne:@"birthDateComponents.month" two:@"firstName" three:@"lastName"];
+        
         dispatch_async(dispatch_get_main_queue(), ^{
+            [self generateSectionInBackGroundWithFilter:self.searchBar.text];
             [self.tableView reloadData];
-            [self.activityIndicator stopAnimating];
         });
     });
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-
 }
 
-#pragma mark - Privat Methods
+#pragma mark - Sort
+
+- (IBAction)changeSort:(UISegmentedControl *)sender {
+    
+    [self.changeSortOperation cancel];
+    __weak ViewController* weakSelf = self;
+    
+    self.changeSortOperation = [NSBlockOperation blockOperationWithBlock:^{
+        
+        switch (weakSelf.segmentedControl.selectedSegmentIndex) {
+            case 0:
+                [weakSelf sortArray:weakSelf.studentsList byParamOne:@"birthDateComponents.month" two:@"firstName" three:@"lastName"];
+                break;
+            case 1:
+                [weakSelf sortArray:weakSelf.studentsList byParamOne:@"firstName" two:@"lastName" three:@"birthDateComponents.year"];
+                break;
+            case 2:
+                [weakSelf sortArray:weakSelf.studentsList byParamOne:@"lastName" two:@"firstName" three:@"birthDateComponents.year"];
+                break;
+                
+            default:
+                break;
+        }
+        
+        weakSelf.sections = [weakSelf generateSectionsFromArray:self.studentsList withFilter:self.searchBar.text];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.tableView reloadData];
+        });
+        
+    }];
+    
+    [self.sortQueue addOperation:self.changeSortOperation];
+}
+
+- (void) sortArray:(NSMutableArray*) inputArray byParamOne:(NSString*) paramOne two:(NSString*)paramTwo three:(NSString*)paramThree {
+    
+    
+    NSSortDescriptor* descriptorOne = [NSSortDescriptor sortDescriptorWithKey:paramOne ascending:YES];
+    NSSortDescriptor* descriptorTwo = [NSSortDescriptor sortDescriptorWithKey:paramTwo ascending:YES];
+    NSSortDescriptor* descriptorThree = [NSSortDescriptor sortDescriptorWithKey:paramThree ascending:YES];
+    
+    [inputArray sortUsingDescriptors:[NSArray arrayWithObjects:descriptorOne, descriptorTwo, descriptorThree, nil]];
+}
+
+
+#pragma mark - "Generate" Methods
+
+- (NSMutableArray*) generateStudentsArray {
+    
+    NSMutableArray* students = [NSMutableArray array];
+    
+    for (int i = 0; i < studentsCount; i++) {
+        Student* std = [Student new];
+        [students addObject:[std getStudentInfo]];
+    }
+    
+    return students;
+}
 
 - (void) generateSectionInBackGroundWithFilter:(NSString*) filter{
     
-    [self.operationQueue cancelAllOperations];
-    [self.operation cancel];
+    [self.searchOperation cancel];
     
     __weak ViewController* weakSelf = self;
     
-    self.operation = [NSBlockOperation blockOperationWithBlock:^{
+    self.searchOperation = [NSBlockOperation blockOperationWithBlock:^{
         
-        NSArray* sectionsArray = [weakSelf generateSectionsFromArray:weakSelf.studentsList withFilter:filter];
+        NSMutableArray* sectionsArray = [weakSelf generateSectionsFromArray:weakSelf.studentsList withFilter:filter];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             weakSelf.sections = sectionsArray;
             [weakSelf.tableView reloadData];
+            [self.activityIndicator stopAnimating];
         });
     }];
     
-    [self.operationQueue addOperation:self.operation];
+    [self.searchQueue addOperation:self.searchOperation];
 }
 
-- (void) generateStudentsArray {
-        
-    self.studentsList = [NSMutableArray array];
-    
-    for (int i = 0; i < studentsCount; i++) {
-        Student* std = [Student new];
-        [self.studentsList addObject:[std getStudentInfo]];
-    }
-    
-    NSSortDescriptor* sortByMonth = [[NSSortDescriptor alloc] initWithKey:@"birthDateComponents.month" ascending:YES];
-    NSSortDescriptor* sortByDay = [[NSSortDescriptor alloc] initWithKey:@"birthDateComponents.day" ascending:YES];
-    NSSortDescriptor* sortByYear = [[NSSortDescriptor alloc] initWithKey:@"birthDateComponents.year" ascending:YES];
-    
-    [self.studentsList sortUsingDescriptors:[NSArray arrayWithObjects:sortByMonth, sortByDay, sortByYear, nil]];
-}
--(NSArray*) generateSectionsFromArray:(NSMutableArray*) studentsArray withFilter: (NSString*) filter{
+
+-(NSMutableArray*) generateSectionsFromArray:(NSMutableArray*) studentsArray withFilter: (NSString*) filter{
     
     NSString* currentMonth = nil;
-    
     NSMutableArray* sec = [NSMutableArray array];
     
     for (Student* student in studentsArray) {
         
-        NSString* name = [NSString stringWithFormat:@"%@ %@", student.firstName, student.lastName];
+        NSString* fullName = [NSString stringWithFormat:@"%@ %@", student.firstName, student.lastName];
         
-        if ([filter length] > 0 && [name rangeOfString:filter].location == NSNotFound) {
+
+        if ([filter length] > 0 && [fullName rangeOfString:filter].location == NSNotFound) {
             continue;
         }
         
@@ -101,25 +153,40 @@ static const NSInteger studentsCount = 1000;
         Section* section = nil;
         NSString* firstMonth = [dateFormater stringFromDate:student.birthDate];
         
+        if (self.segmentedControl.selectedSegmentIndex != -1) {
+            
+            switch (self.segmentedControl.selectedSegmentIndex) {
+                case 0:
+                    firstMonth = [dateFormater stringFromDate:student.birthDate];
+                    break;
+                case 1:
+                    firstMonth = [NSString stringWithFormat:@"%@", [student.firstName substringToIndex:1]];
+                    break;
+                case 2:
+                    firstMonth = [NSString stringWithFormat:@"%@", [student.lastName substringToIndex:1]];
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        
+        
         if (![currentMonth isEqualToString:firstMonth]) {
+            
             section = [[Section alloc]init];
             section.sectionName = firstMonth;
             section.sectionItems = [NSMutableArray array];
-            
             currentMonth = firstMonth;
             [sec addObject:section];
+            
         } else {
             section = [sec lastObject];
         }
         
         [section.sectionItems addObject:student];
         
-        NSSortDescriptor* sortByFirstName = [NSSortDescriptor sortDescriptorWithKey:@"firstName" ascending:YES];
-        NSSortDescriptor* sortByLastName = [NSSortDescriptor sortDescriptorWithKey:@"lastName" ascending:YES];
-        NSSortDescriptor* sortByDay = [NSSortDescriptor sortDescriptorWithKey:@"birthDateComponents.day" ascending:YES];
-        NSSortDescriptor* sortByYear = [NSSortDescriptor sortDescriptorWithKey:@"birthDateComponents.year" ascending:YES];
-        
-        [section.sectionItems sortUsingDescriptors:[NSArray arrayWithObjects:sortByDay, sortByFirstName, sortByLastName, sortByYear, nil]];
+        [self sortArray:section.sectionItems byParamOne:@"birthDateComponents.day" two:@"firstName" three:@"lastName"];
     }
     
     return sec;
@@ -129,6 +196,8 @@ static const NSInteger studentsCount = 1000;
 
 
 - (nullable NSArray<NSString *> *)sectionIndexTitlesForTableView:(UITableView *)tableView{
+    tableView.sectionIndexBackgroundColor = [UIColor clearColor];
+    tableView.sectionIndexColor = [UIColor purpleColor];
     NSMutableArray* array = [NSMutableArray array];
     for (Section* section in self.sections){
         [array addObject:section.sectionName];
@@ -138,8 +207,8 @@ static const NSInteger studentsCount = 1000;
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    tableView.sectionIndexBackgroundColor = [UIColor clearColor];
-    tableView.sectionIndexColor = [UIColor purpleColor];
+//    tableView.sectionIndexBackgroundColor = [UIColor clearColor];
+//    tableView.sectionIndexColor = [UIColor purpleColor];
     return [self.sections count];
 }
 
@@ -150,6 +219,7 @@ static const NSInteger studentsCount = 1000;
 }
 
 - (nullable NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
+    
     return [[self.sections objectAtIndex:section]sectionName];
 }
 
@@ -165,8 +235,6 @@ static const NSInteger studentsCount = 1000;
     NSString* firstName = [[section.sectionItems objectAtIndex:indexPath.row]firstName];
     NSString* lastname = [[section.sectionItems objectAtIndex:indexPath.row]lastName];
     NSDate* birthDate = [[section.sectionItems objectAtIndex:indexPath.row]birthDate];
-    
-
     
     NSDateFormatter* dateFormater = [[NSDateFormatter alloc]init];
     [dateFormater setDateFormat:@"dd/MM/yyyy"];
@@ -200,5 +268,6 @@ static const NSInteger studentsCount = 1000;
 {
     [self searchBarCancelButtonClicked:searchBar];
 }
+
 
 @end

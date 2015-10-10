@@ -16,5 +16,7 @@
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
 @property (weak, nonatomic) IBOutlet UISegmentedControl *segmentedControl;
 
+- (IBAction)changeSort:(UISegmentedControl *)sender;
+
 @end
 

@@ -86,6 +86,9 @@
                                     <segment title="Surname"/>
                                 </segments>
                                 <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <connections>
+                                    <action selector="changeSort:" destination="VDM-iS-2BX" eventType="valueChanged" id="Iqt-47-B23"/>
+                                </connections>
                             </segmentedControl>
                             <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="whiteLarge" id="WPm-2A-ZiC">
                                 <rect key="frame" x="142" y="315" width="37" height="37"/>
