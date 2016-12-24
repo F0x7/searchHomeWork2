@@ -12,7 +12,9 @@
 #import "Section.h"
 
 @interface ViewController ()
-@property(strong, nonatomic) NSOperation* searchOperation;
+@property(strong, nonatomic) NSOperation* searchByBirthDayOperation;
+@property(strong, nonatomic) NSOperation* searchByFirstNameOperation;
+@property(strong, nonatomic) NSOperation* searchByLastNameOperation;
 @property(strong, nonatomic) NSOperation* changeSortOperation;
 @property(strong, nonatomic) NSOperationQueue* searchQueue;
 @property(strong, nonatomic) NSOperationQueue* sortQueue;
@@ -21,7 +23,7 @@
 @property(strong, nonatomic) NSMutableArray* sections;
 @end
 
-static const NSInteger studentsCount = 1500;
+static const NSInteger studentsCount = 5000;
 
 @implementation ViewController
 
@@ -31,20 +33,24 @@ static const NSInteger studentsCount = 1500;
     self.searchQueue = [[NSOperationQueue alloc]init];
     self.sortQueue = [[NSOperationQueue alloc]init];
     self.changeSortOperation = [[NSOperation alloc]init];
-    self.searchOperation = [[NSOperation alloc]init];
+    self.searchByBirthDayOperation = [[NSOperation alloc]init];
 
     [self.activityIndicator startAnimating];
+    [self.searchBar setShowsCancelButton:NO animated:YES];    
+    
+    self.studentsList = [NSMutableArray array];
+    self.sections = [NSMutableArray array];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        self.studentsList = [NSMutableArray array];
-        self.sections = [NSMutableArray array];
+        
         self.studentsList = [self generateStudentsArray];
-        
         [self sortArray:self.studentsList byParamOne:@"birthDateComponents.month" two:@"firstName" three:@"lastName"];
-        
+
         dispatch_async(dispatch_get_main_queue(), ^{
+
             [self generateSectionInBackGroundWithFilter:self.searchBar.text];
             [self.tableView reloadData];
+            
         });
     });
 }
@@ -54,16 +60,18 @@ static const NSInteger studentsCount = 1500;
 
 #pragma mark - Sort
 
-- (IBAction)changeSort:(UISegmentedControl *)sender {
-    
+- (IBAction)changeSortAction:(UISegmentedControl *)sender {
+
     [self.changeSortOperation cancel];
+    
     __weak ViewController* weakSelf = self;
     
     self.changeSortOperation = [NSBlockOperation blockOperationWithBlock:^{
         
-        switch (weakSelf.segmentedControl.selectedSegmentIndex) {
+        switch (sender.selectedSegmentIndex) {
             case 0:
                 [weakSelf sortArray:weakSelf.studentsList byParamOne:@"birthDateComponents.month" two:@"firstName" three:@"lastName"];
+                
                 break;
             case 1:
                 [weakSelf sortArray:weakSelf.studentsList byParamOne:@"firstName" two:@"lastName" three:@"birthDateComponents.year"];
@@ -76,7 +84,7 @@ static const NSInteger studentsCount = 1500;
                 break;
         }
         
-        weakSelf.sections = [weakSelf generateSectionsFromArray:self.studentsList withFilter:self.searchBar.text];
+        [weakSelf generateSectionInBackGroundWithFilter:self.searchBar.text];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.tableView reloadData];
@@ -89,7 +97,6 @@ static const NSInteger studentsCount = 1500;
 
 - (void) sortArray:(NSMutableArray*) inputArray byParamOne:(NSString*) paramOne two:(NSString*)paramTwo three:(NSString*)paramThree {
     
-    
     NSSortDescriptor* descriptorOne = [NSSortDescriptor sortDescriptorWithKey:paramOne ascending:YES];
     NSSortDescriptor* descriptorTwo = [NSSortDescriptor sortDescriptorWithKey:paramTwo ascending:YES];
     NSSortDescriptor* descriptorThree = [NSSortDescriptor sortDescriptorWithKey:paramThree ascending:YES];
@@ -97,28 +104,29 @@ static const NSInteger studentsCount = 1500;
     [inputArray sortUsingDescriptors:[NSArray arrayWithObjects:descriptorOne, descriptorTwo, descriptorThree, nil]];
 }
 
-
 #pragma mark - "Generate" Methods
 
 - (NSMutableArray*) generateStudentsArray {
-    
     NSMutableArray* students = [NSMutableArray array];
-    
-    for (int i = 0; i < studentsCount; i++) {
+    dispatch_apply(studentsCount, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(size_t index) {
         Student* std = [Student new];
         [students addObject:[std getStudentInfo]];
-    }
-    
+        
+    });
     return students;
 }
 
 - (void) generateSectionInBackGroundWithFilter:(NSString*) filter{
     
-    [self.searchOperation cancel];
+    [self.searchByBirthDayOperation cancel];
     
+    if ([self.searchByBirthDayOperation isCancelled]) {
+        NSLog(@"cancel");
+    }
+
     __weak ViewController* weakSelf = self;
     
-    self.searchOperation = [NSBlockOperation blockOperationWithBlock:^{
+    self.searchByBirthDayOperation = [NSBlockOperation blockOperationWithBlock:^{
         
         NSMutableArray* sectionsArray = [weakSelf generateSectionsFromArray:weakSelf.studentsList withFilter:filter];
         
@@ -129,9 +137,8 @@ static const NSInteger studentsCount = 1500;
         });
     }];
     
-    [self.searchQueue addOperation:self.searchOperation];
+    [self.searchQueue addOperation:self.searchByBirthDayOperation];
 }
-
 
 -(NSMutableArray*) generateSectionsFromArray:(NSMutableArray*) studentsArray withFilter: (NSString*) filter{
     
@@ -151,33 +158,30 @@ static const NSInteger studentsCount = 1500;
         [dateFormater setDateFormat:@"MMM"];
         
         Section* section = nil;
-        NSString* firstMonth = [dateFormater stringFromDate:student.birthDate];
-        
-        if (self.segmentedControl.selectedSegmentIndex != -1) {
-            
-            switch (self.segmentedControl.selectedSegmentIndex) {
-                case 0:
-                    firstMonth = [dateFormater stringFromDate:student.birthDate];
-                    break;
-                case 1:
-                    firstMonth = [NSString stringWithFormat:@"%@", [student.firstName substringToIndex:1]];
-                    break;
-                case 2:
-                    firstMonth = [NSString stringWithFormat:@"%@", [student.lastName substringToIndex:1]];
-                    break;
-                    
-                default:
-                    break;
-            }
+        NSString* firstValue = [dateFormater stringFromDate:student.birthDate];
+
+        switch (self.segmentedControl.selectedSegmentIndex) {
+            case 0:
+                firstValue = [dateFormater stringFromDate:student.birthDate];
+                break;
+            case 1:
+                firstValue = [NSString stringWithFormat:@"%@", [student.firstName substringToIndex:1]];
+                break;
+            case 2:
+                firstValue = [NSString stringWithFormat:@"%@", [student.lastName substringToIndex:1]];
+                break;
+                
+            default:
+                break;
         }
         
         
-        if (![currentMonth isEqualToString:firstMonth]) {
+        if (![currentMonth isEqualToString:firstValue]) {
             
             section = [[Section alloc]init];
-            section.sectionName = firstMonth;
+            section.sectionName = firstValue;
             section.sectionItems = [NSMutableArray array];
-            currentMonth = firstMonth;
+            currentMonth = firstValue;
             [sec addObject:section];
             
         } else {
@@ -207,8 +211,6 @@ static const NSInteger studentsCount = 1500;
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-//    tableView.sectionIndexBackgroundColor = [UIColor clearColor];
-//    tableView.sectionIndexColor = [UIColor purpleColor];
     return [self.sections count];
 }
 

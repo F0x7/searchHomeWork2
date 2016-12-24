@@ -13,10 +13,10 @@
 @implementation Student
 
 - (Student*) getStudentInfo {
-    
+
     [self generateStudentName];
     [self generateBirthDate];
-    
+ 
     
     return self;
 }

@@ -13,14 +13,14 @@
 		98FB6A151BC831A60091B1C2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A131BC831A60091B1C2 /* Main.storyboard */; };
 		98FB6A171BC831A60091B1C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A161BC831A60091B1C2 /* Assets.xcassets */; };
 		98FB6A1A1BC831A60091B1C2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A181BC831A60091B1C2 /* LaunchScreen.storyboard */; };
-		98FB6A231BC832F80091B1C2 /* MyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A221BC832F80091B1C2 /* MyCell.m */; settings = {ASSET_TAGS = (); }; };
-		98FB6A2D1BC836060091B1C2 /* name.csv in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A271BC836060091B1C2 /* name.csv */; settings = {ASSET_TAGS = (); }; };
-		98FB6A2E1BC836060091B1C2 /* NameGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A291BC836060091B1C2 /* NameGenerator.m */; settings = {ASSET_TAGS = (); }; };
-		98FB6A2F1BC836060091B1C2 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A2A1BC836060091B1C2 /* README */; settings = {ASSET_TAGS = (); }; };
-		98FB6A301BC836060091B1C2 /* syllable.csv in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A2B1BC836060091B1C2 /* syllable.csv */; settings = {ASSET_TAGS = (); }; };
-		98FB6A311BC836060091B1C2 /* title.csv in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A2C1BC836060091B1C2 /* title.csv */; settings = {ASSET_TAGS = (); }; };
-		98FB6A341BC836F70091B1C2 /* Student.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A331BC836F70091B1C2 /* Student.m */; settings = {ASSET_TAGS = (); }; };
-		98FB6A371BC850060091B1C2 /* Section.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A361BC850060091B1C2 /* Section.m */; settings = {ASSET_TAGS = (); }; };
+		98FB6A231BC832F80091B1C2 /* MyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A221BC832F80091B1C2 /* MyCell.m */; };
+		98FB6A2D1BC836060091B1C2 /* name.csv in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A271BC836060091B1C2 /* name.csv */; };
+		98FB6A2E1BC836060091B1C2 /* NameGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A291BC836060091B1C2 /* NameGenerator.m */; };
+		98FB6A2F1BC836060091B1C2 /* README in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A2A1BC836060091B1C2 /* README */; };
+		98FB6A301BC836060091B1C2 /* syllable.csv in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A2B1BC836060091B1C2 /* syllable.csv */; };
+		98FB6A311BC836060091B1C2 /* title.csv in Resources */ = {isa = PBXBuildFile; fileRef = 98FB6A2C1BC836060091B1C2 /* title.csv */; };
+		98FB6A341BC836F70091B1C2 /* Student.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A331BC836F70091B1C2 /* Student.m */; };
+		98FB6A371BC850060091B1C2 /* Section.m in Sources */ = {isa = PBXBuildFile; fileRef = 98FB6A361BC850060091B1C2 /* Section.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -153,7 +153,7 @@
 		98FB69FF1BC831A50091B1C2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0700;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = "Egor Bakaykin";
 				TargetAttributes = {
 					98FB6A061BC831A50091B1C2 = {
@@ -247,8 +247,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -290,8 +292,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -355,6 +359,7 @@
 				98FB6A201BC831A60091B1C2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
